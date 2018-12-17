@@ -1,11 +1,15 @@
 # bigondatanalytics
-POCs for big on data analytics
+POCs for big on data analytics, used Hortonworks Data platform to explore.
 
-####Sample Word Statistics
-1. Copy file datasets/shakespeare.txt to your HDFS file system.
+### Sample Word Statistics by HDP
+Copy file datasets/shakespeare.txt to HDFS file system.
+```
    (Ambari / FilesView -> /tmp/data/)
-  
-2. Submit to spark as below
-spark-submit ./Main.py
+```
 
-####360 degree customer view
+Submit to spark as below
+```
+spark-submit ./Main.py
+```
+
+#####360 degree customer view
