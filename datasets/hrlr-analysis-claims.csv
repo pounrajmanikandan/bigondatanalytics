@@ -1,0 +1,3 @@
+claimid,transactionref,datetime,policyid,type,policeFIR,vehicleregno,vehicelchassisno,placeofincident,purposeoftravel,repaircost,systemstatus
+1,TXNCLM1001,2016-03-24,1000001,THEFT,No,TN01100147,CHS1100,Madurai,Temple,0,
+2,TXNCLM1002,2016-01-20,1000006,ACCIDENT,No,TN01349156,CHS1349,Chennai,Tour,25000,
