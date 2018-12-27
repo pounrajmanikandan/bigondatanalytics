@@ -18,12 +18,12 @@ def execute():
     spark_context = SparkContext(conf=spark_config)
     sql_context = SQLContext(spark_context)
 
-    policy_file = spark_context.textFile("../datasets/hrlr-analysis-policies.csv")
+    policy_file = spark_context.textFile("../datasets/policies.csv")
     policy_header = policy_file.first()
 
     policies = policy_file.filter(
         lambda line_data: line_data not in policy_header).map(lambda line: line.split(",")).map(
-        lambda line_cols: (line_cols[2], (line_cols[4],line_cols[5],str(line_cols[6]).split("-")[0])))
+        lambda line_cols: (line_cols[0], (line_cols[3],line_cols[4],str(line_cols[5]).split("-")[0])))
 
     policies_tiv = policies.map(lambda dat_o: (dat_o[0], calculate_payoff(int(dat_o[1][0]), int(dat_o[1][1]), int(dat_o[1][2]))))
 
@@ -33,9 +33,10 @@ def execute():
     policy_with_transactions = policies_tiv.leftOuterJoin(transactions)
 
     policies_tiv_risk_state = policy_with_transactions.map(lambda dat_o: (dat_o[0], dat_o[1][1], validate_payoff(dat_o[1][0], dat_o[1][1])))
+    print("Policies TIV risk state {}".format(policies_tiv_risk_state.collect()))
 
     customer_policies_processed = policies_tiv_risk_state.\
-        map(lambda dat_o: (dat_o[0], dat_o[1][2], dat_o[1][3], dat_o[1][4], dat_o[1][5], dat_o[1][6], str(dat_o[2])))
+        map(lambda dat_o: (dat_o[0], dat_o[1][1], dat_o[1][2], dat_o[1][3], dat_o[1][4], str(dat_o[2])))
 
     print(customer_policies_processed.collect())
 
@@ -50,7 +51,7 @@ def validate_payoff(policy_payoff, transactions):
     payment_state = 'fair'
 
     if transactions is not None:
-        payment_state = transactions[6]
+        payment_state = transactions[4]
 
     deduct_tiv_claim_rate = default_deduct_tiv_claim_rate
 
