@@ -127,7 +127,7 @@ class Generator:
             if repeat_ind > len(self.generated_ids[key]):
                 repeat_ind = len(self.generated_ids[key])
 
-            return self.generated_ids[key][repeat_ind - 1]
+            return self.generated_ids[key][int(repeat_ind - 1)]
 
         if seq == 1:
             self.sequence += 1
