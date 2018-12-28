@@ -6,13 +6,14 @@ from collections import OrderedDict
 import random
 import json
 import calendar
+import time
 
 
 class Generator:
     def __init__(self):
         self.file_name = ""
-        self.config_directory = "/home/sys-user/Desktop/Dataset/global-dataset/"
-        self.output_directory = "/home/sys-user/PycharmProjects/customerinsights/datasets/"
+        self.config_directory = "../datasets/"
+        self.output_directory = "../datasets/"
         self.person_datafile = self.config_directory+"person-names.txt"
         self.person_names_data = []
         self.mail_exchange_datafile = self.config_directory+"mailexchanges.txt"
@@ -21,6 +22,8 @@ class Generator:
         self.repeat = 1
         self.name_store = ""
         self.generated_ids = {}
+        self.errors = {}
+        self.current_processing_dataset = ""
 
     def load_lookup(self):
         try:
@@ -48,11 +51,13 @@ class Generator:
 
         for key in mappings_json.keys():
             print("Generating {} dataset".format(key))
+            self.current_processing_dataset = key
 
             fields = mappings_json[key]["fields"]
             records = mappings_json[key]["records"]
             self.file_name = (self.output_directory+"{}.csv").format(key)
             self.generated_ids[key] = []
+            self.errors[key] = {}
 
             file_obj = open(self.file_name, "a")
             self.sequence = 0
@@ -71,12 +76,7 @@ class Generator:
                 for record in range(0,records):
                     self.repeat = 1
                     for field in fields:
-                        ref = ""
-                        try:
-                            if field.__getitem__("ref") is not None:
-                                ref = field["ref"]
-                        except:
-                            print("Field 'ref' not found. Using default.")
+                        ref = self.get_field(field, "ref", "")
 
                         if field["type"] == "identity" and ref != "":
                             self.repeat = int(str(ref).split("/")[1])
@@ -101,27 +101,19 @@ class Generator:
             finally:
                 file_obj.close()
 
+    def get_field(self, field, field_name, default):
+        data = default
+        try:
+            if field.__getitem__(field_name) is not None:
+                data = field[field_name]
+        except:
+            self.errors[self.current_processing_dataset][field_name] = "Field {} in {} not found. Using default.".format(field_name, self.current_processing_dataset)
+        return data
+
     def generate_identity(self, field):
-        seq = 0
-        prefix = 0
-        ref = ""
-        try:
-            if field.__getitem__("seq") is not None:
-                seq = field["seq"]
-        except:
-            print("Field 'seq' not found. Using default.")
-
-        try:
-            if field.__getitem__("prefix") is not None:
-                prefix = field["prefix"]
-        except:
-            print("Field 'prefix' not found. Using default.")
-
-        try:
-            if field.__getitem__("ref") is not None:
-                ref = field["ref"]
-        except:
-            print("Field 'ref' not found. Using default.")
+        seq = self.get_field(field, "seq", 0)
+        prefix = self.get_field(field, "prefix", "")
+        ref = self.get_field(field, "ref", "")
 
         if ref != "":
             key = str(field["ref"]).split("/")[0]
@@ -145,86 +137,40 @@ class Generator:
             return int(self.sequence)
 
     def generate_number(self, field):
-        range = ""
-        try:
-            if field.__getitem__("range") is not None:
-                range = field["range"]
-        except:
-            print("Field 'range' not found. Using default.")
+        range_value = self.get_field(field, "range", "")
 
-        if range != "":
-            if int(range.split("-")[0]) == int(range.split("-")[1]):
-                return int(range.split("-")[0])
+        if range_value != "":
+            if int(range_value.split("-")[0]) == int(range_value.split("-")[1]):
+                return int(range_value.split("-")[0])
             else:
-                return random.randrange(int(range.split("-")[0]), int(range.split("-")[1]))
+                return random.randrange(int(range_value.split("-")[0]), int(range_value.split("-")[1]))
 
     def generate_phone(self, field):
         first = str(random.randint(100, 999))
         second = str(random.randint(1, 888)).zfill(3)
         last = str(random.randint(1, 9998)).zfill(4)
-        return ("{}-{}-{}".format(first, second, last))
+        return "{}-{}-{}".format(first, second, last)
 
     def generate_date(self, field):
-        range = ""
-        try:
-            if field.__getitem__("range") is not None:
-                range = field["range"]
-        except:
-            print("Field 'range' not found. Using default.")
+        range_value = self.get_field(field, "range", "")
 
         end_year = datetime.now( ).year
-        if str(range.split("-")[1]).upper() != "NOW":
-            end_year = range.split("-")[1]
+        if str(range_value.split("-")[1]).upper() != "NOW":
+            end_year = range_value.split("-")[1]
 
-        year = random.randint(int(range.split("-")[0]), end_year)
+        year = random.randint(int(range_value.split("-")[0]), end_year)
         month = random.randint(1, 12)
         date_value = calendar.monthrange(year, month)
         date_value = str(random.randint(1, date_value[1])).zfill(2)
-        return ("{}-{}-{}".format(year, str(month).zfill(2), date_value))
+        return "{}-{}-{}".format(year, str(month).zfill(2), date_value)
 
     def generate_string(self, field):
-        delimiter = ""
-        store = 0
-        length = 100
-        options = ""
-        prefix = ""
-        seq = 0
-
-        try:
-            if field.__getitem__("delimiter") is not None:
-                delimiter = field["delimiter"]
-        except:
-            print("Field 'delimiter' not found. Using default.")
-
-        try:
-            if field.__getitem__("store") is not None:
-                store = field["store"]
-        except:
-            print("Field 'store' not found. Using default.")
-
-        try:
-            if field.__getitem__("length") is not None:
-                length = field["length"]
-        except:
-            print("Field 'length' not found. Using default.")
-
-        try:
-            if field.__getitem__("options") is not None:
-                options = field["options"]
-        except:
-            print("Field 'options' not found. Using default.")
-
-        try:
-            if field.__getitem__("seq") is not None:
-                seq = field["seq"]
-        except:
-            print("Field 'seq' not found. Using default.")
-
-        try:
-            if field.__getitem__("prefix") is not None:
-                prefix = field["prefix"]
-        except:
-            print("Field 'prefix' not found. Using default.")
+        delimiter = self.get_field(field, "delimiter", "")
+        options = self.get_field(field, "options", "")
+        prefix = self.get_field(field, "prefix", "")
+        store = self.get_field(field, "store", 0)
+        length = self.get_field(field, "length", 100)
+        seq = self.get_field(field, "seq", 0)
 
         if options != "":
             return random.choice(options.split(","))
@@ -235,7 +181,12 @@ class Generator:
         temp_name_store = ""
         self.name_store = temp_name_store
 
-        if self.person_names_data[self.sequence] is not None:
+        names_ind = self.sequence
+        if self.sequence >= len(self.person_names_data):
+            names_ind = random.randint(2, len(self.person_names_data) -1)
+            temp_name_store = "{}{}{}{}{}".format(self.person_names_data[names_ind], delimiter,
+                                             self.person_names_data[names_ind - 1], delimiter, self.person_names_data[names_ind - 2])
+        elif self.person_names_data[self.sequence] is not None:
             temp_name_store = "{}{}{}{}{}".format(self.person_names_data[self.sequence], delimiter,
                                              self.person_names_data[self.sequence], delimiter, self.person_names_data[self.sequence])
 
@@ -258,4 +209,9 @@ class Generator:
 
 if __name__ == "__main__":
     generator = Generator()
+    print("Started")
+    start = time.time()
     generator.execute()
+    end = time.time()
+    print("Completed. Took Time {} secs".format(round(end - start, 3)))
+

@@ -72,15 +72,9 @@ class TransactionProcessor:
         total_payments = payments.map(lambda dat_a: (dat_a[1], 1)).reduceByKey(add)
         invalid_payments = payments.filter(lambda dat_a: dat_a[3] not in '"received"').map(lambda dat_a: (dat_a[1], 1)).reduceByKey(add)
 
-        print(total_payments.collect())
-        print(invalid_payments.collect())
-
-        print(total_payments.leftOuterJoin(invalid_payments).collect())
-
         payments_data = total_payments.leftOuterJoin(invalid_payments).\
             filter(lambda dat_a: isinstance(dat_a[1][1], int)).map(lambda dat_a: (dat_a[0], floordiv(dat_a[1][0], dat_a[1][1]))).\
                 filter(lambda dat_a: ge(dat_a[1], local_payment)).map(lambda dat_a: (dat_a[0], "unfair"))
-        print(customer_policies.leftOuterJoin(payments_data).collect())
 
         customer_policies_with_payments = customer_policies.leftOuterJoin(payments_data). \
             map(lambda dat_o: (str(dat_o[0] + ";" + dat_o[1][0]), dat_o[1][1]))
