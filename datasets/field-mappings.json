@@ -1,0 +1,202 @@
+{
+   "customers":{
+      "records": 1000000,
+      "fields":[
+         {
+            "name":"customerid",
+            "type": "identity",
+            "seq": 1,
+	    "store": 1
+         },
+         {
+            "name":"uniqueid",
+            "type": "string",
+            "prefix": "AAD",
+            "seq": 1
+         },
+         {
+            "name":"name",
+            "type":"string",
+            "store": 1,
+            "delimiter": " ",
+	    "length": 15
+         },
+         {
+            "name":"age",
+            "type":"number",
+            "range":"10-60"
+         },
+         {
+            "name":"gender",
+            "type":"string",
+            "options":"M,F"
+         },
+         {
+            "name":"emailid",
+            "type":"email"
+         },
+         {
+            "name":"phonenos",
+            "type":"phone"
+         },
+         {
+            "name":"sizeoffamily",
+            "type":"number",
+            "range":"0-8"
+         }
+      ]
+   },
+   "policies":{
+      "records": 1000000,
+      "fields":[
+         {
+            "name":"policyid",
+            "prefix": "PLY-",
+            "type": "identity",
+            "seq": 1,
+	    "store": 1
+         },
+         {
+            "name":"customerid",
+            "type": "identity",
+            "ref": "customers/1",
+            "store": 0
+         },
+         {
+            "name":"premium",
+            "type":"number",
+            "range":"2000-5000"
+         },
+         {
+            "name":"avgclaimamount",
+            "type":"number",
+            "range":"250000-500000"
+         },
+         {
+            "name":"tenure",
+            "type":"number",
+            "range":"5-5"
+         },
+         {
+            "name":"date",
+            "type":"date",
+            "range":"2015-NOW"
+         }
+      ]
+   },
+   "claims":{
+      "records": 500000,
+      "fields":[
+         {
+            "name":"claimid",
+            "prefix": "CLM-",
+            "type": "identity",
+            "seq": 1,
+	    "store": 0
+         },
+         {
+            "name":"policyid",
+            "type": "identity",
+            "ref": "policies/1",
+            "store": 0
+         },
+         {
+            "name":"transactionref",
+            "type": "string",
+            "prefix": "TXN-CLM",
+            "seq": 1
+         },
+         {
+            "name":"datetime",
+            "type":"date",
+            "range":"2015-NOW"
+         },
+         {
+            "name":"type",
+            "type":"string",
+            "options":"THEFT,ACCIDENT"
+         },
+         {
+            "name":"policyFIR",
+            "type":"string",
+            "options":"Yes,No"
+         }
+      ]
+   },
+   "complaints":{
+      "records": 50000,
+      "fields":[
+         {
+            "name":"compliantid",
+            "prefix": "COM-",
+            "type": "identity",
+            "seq": 1,
+	    "store": 0
+         },
+         {
+            "name":"policyid",
+            "type": "identity",
+            "ref": "policies/2",
+            "store": 0
+         },
+         {
+            "name":"transactionref",
+            "type": "string",
+            "prefix": "TXN-COM",
+            "seq": 1
+         },
+         {
+            "name":"description",
+            "type":"string",
+            "options":"Online portal not working,Portal stuck in middle,Renewal intimation letter not received,Change of mailing address,Change of contact number,Portal access"
+         },
+         {
+            "name":"status",
+            "type":"string",
+            "options":"rejected,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved,resolved"
+         },
+         {
+            "name":"datetime",
+            "type":"date",
+            "range":"2015-NOW"
+         }
+      ]
+   },
+   "payments":{
+      "records": 1000000,
+      "fields":[
+         {
+            "name":"paymentid",
+            "prefix": "PAY-",
+            "type": "identity",
+            "seq": 1,
+	    "store": 0
+         },
+         {
+            "name":"policyid",
+            "type": "identity",
+            "ref": "policies/3",
+            "store": 0
+         },
+         {
+            "name":"transactionref",
+            "type": "string",
+            "prefix": "TXN-PAY",
+            "seq": 1
+         },
+         {
+            "name":"status",
+            "type":"string",
+            "options":"notreceived,received,received,received,received,received,received,received,received,received,received"
+         },
+         {
+            "name":"datetime",
+            "type":"date",
+            "range":"2015-NOW"
+         }
+      ]
+   }
+
+}
+
+
