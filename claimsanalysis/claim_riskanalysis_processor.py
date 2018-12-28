@@ -11,6 +11,7 @@ tiv_year_rate = 0.25
 default_deduct_tiv_claim_rate = 0.10
 max_deduct_tiv_claim_rate = 2
 current_year = datetime.now().year
+directory = "hdfs:///tmp/data/"
 
 
 def execute():
@@ -18,7 +19,7 @@ def execute():
     spark_context = SparkContext(conf=spark_config)
     sql_context = SQLContext(spark_context)
 
-    policy_file = spark_context.textFile("../datasets/policies.csv")
+    policy_file = spark_context.textFile(directory+"policies.csv")
     policy_header = policy_file.first()
 
     policies = policy_file.filter(
@@ -27,22 +28,19 @@ def execute():
 
     policies_tiv = policies.map(lambda dat_o: (dat_o[0], calculate_payoff(int(dat_o[1][0]), int(dat_o[1][1]), int(dat_o[1][2]))))
 
-    transaction_file = spark_context.sequenceFile("./output/transactions/*")
+    transaction_file = spark_context.sequenceFile(directory+"/transactions/*")
     transactions = transaction_file.map(lambda dat_o: str(dat_o[0]).split(";")).map(lambda dat_o: (dat_o[0], dat_o))
 
     policy_with_transactions = policies_tiv.leftOuterJoin(transactions)
 
     policies_tiv_risk_state = policy_with_transactions.map(lambda dat_o: (dat_o[0], dat_o[1][1], validate_payoff(dat_o[1][0], dat_o[1][1])))
-    print("Policies TIV risk state {}".format(policies_tiv_risk_state.collect()))
 
     customer_policies_processed = policies_tiv_risk_state.\
         map(lambda dat_o: (dat_o[0], dat_o[1][1], dat_o[1][2], dat_o[1][3], dat_o[1][4], str(dat_o[2])))
 
-    print(customer_policies_processed.collect())
-
     data_frame = sql_context.createDataFrame(customer_policies_processed)
     panda_dataframe = data_frame.toPandas()
-    panda_dataframe.to_csv("./output/customer_policies.csv")  # Save in DB (Hive)
+    panda_dataframe.to_csv(directory+"customer_policies.csv")  # Save in DB (Hive)
 
 
 def validate_payoff(policy_payoff, transactions):
